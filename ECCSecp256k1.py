@@ -1,4 +1,5 @@
 class Secp256k1:
+    
     def __init__(self):
         self.A = 0
         self.B = 7
@@ -40,6 +41,7 @@ class Secp256k1:
                 current = self.add(current, point)
         return current
 
+""" ตัวอย่างการใช้งาน """"
 curve = Secp256k1()
 private_key = "e38b1a0e3169055bbec35266002ee43519a545dd30c6315942ce82da60b5853d"
 k = int(private_key, 16)
