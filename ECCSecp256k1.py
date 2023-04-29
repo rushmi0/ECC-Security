@@ -1,3 +1,4 @@
+# ECCSecp256k1.py file
 class Secp256k1:
     
     def __init__(self):
