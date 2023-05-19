@@ -57,7 +57,6 @@ class EllipticCurve:
         z = message
         # k = int("3bb13029ce7b1f559ef5e747fcac439f1455a2ec7c5f09b72290795e70665044",16)
         k = getrandbits(256); r = 0; s = 0
-        # ถ้า r หรือ s เป็น 0 เริ่มลุ่มค่า k ใหม่
         while r == 0 or s == 0:
             point = self.multiply(k)
             k_inv = self.modinv(k, self.N)
