@@ -110,7 +110,7 @@ def main():
     sig = curve.signature(private_key, message)
     print("ECDSA signature", sig)
 
-    # สร้างเซ็น ECDSA
+    # ตรวจสอบเซ็น ECDSA
     ver = curve.verify(P, message, sig)
     print(f'signature is {ver}')
 
