@@ -14,14 +14,18 @@ class EllipticCurve:
 
     # การคำนวณหลัก: Elliptic Curve cryptography
     def modinv(self, A: int, N=None) -> int:
-        if N is None: N = self.P
-        lm, hm = 1, 0
-        low, high = A % N, N
-        while low > 1:
-            ratio = high // low
-            nm, new = hm - lm * ratio, high - low * ratio
-            lm, low, hm, high = nm, new, lm, low
-        return lm % N
+        if N is None:
+            N = self.P
+            
+        def extended_gcd(a, b):
+            if b == 0:
+                return a, 1, 0
+            gcd, x, y = extended_gcd(b, a % b)
+            return gcd, y, x - (a // b) * y
+
+        gcd, x, _ = extended_gcd(A, N)
+        result = x % N
+        return result if result >= 0 else result + N
 
     def double(self, point: int) -> dict:
         lam_numer = (3 * point["x"] ** 2 + self.A) % self.P
