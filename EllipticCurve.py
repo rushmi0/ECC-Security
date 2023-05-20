@@ -2,28 +2,32 @@ from random import getrandbits
 
 class EllipticCurve:
 
-    # Constructor: Secp256k1
+    # Secp256k1
     def __init__(self):
         self.A = 0
         self.B = 7
-        self.P = 2 ** 256 - 2 ** 32 - 2 ** 9 - 2 ** 8 - 2 ** 7 - 2 ** 6 - 2 ** 4 - 1
-        self.N = int("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141", 16)
-        self.G = {"x": int("79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798", 16),
-                  "y": int("483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8", 16)}
+        # 2 ** 256 - 2 ** 32 - 2 ** 9 - 2 ** 8 - 2 ** 7 - 2 ** 6 - 2 ** 4 - 1
+        self.P = 115792089237316195423570985008687907853269984665640564039457584007908834671663
+        self.N = 115792089237316195423570985008687907852837564279074904382605163141518161494337
+        self.G = {"x": 55066263022277343669578718895168534326250603453777594175500187360389116729240,
+                  "y": 32670510020758816978083085130507043184471273380659243275938904335757337482424}
 
     # การคำนวณหลัก: Elliptic Curve cryptography
     def modinv(self, A: int, N=None) -> int:
         if N is None: N = self.P
-        lm, hm = 1, 0; low, high = A % N, N
+        lm, hm = 1, 0
+        low, high = A % N, N
         while low > 1:
             ratio = high // low
-            nm, new = hm - lm * ratio, high - low * ratio; lm, low, hm, high = nm, new, lm, low
+            nm, new = hm - lm * ratio, high - low * ratio
+            lm, low, hm, high = nm, new, lm, low
         return lm % N
 
     def double(self, point: int) -> dict:
         lam_numer = (3 * point["x"] ** 2 + self.A) % self.P
         lam_denom = (2 * point["y"]) % self.P
         lam = (lam_numer * self.modinv(lam_denom)) % self.P
+
         xR = (lam ** 2 - 2 * point["x"]) % self.P
         yR = (lam * (point["x"] - xR) - point["y"]) % self.P
         return {"x": xR, "y": yR}
@@ -48,20 +52,32 @@ class EllipticCurve:
         return current
 
     def publickey(self, k: int) -> str:
-        # สร้าง Public key
         point = self.multiply(k)
-        return "04" + hex(point['x'])[2:] + hex(point['y'])[2:]
+        return f"04{hex(point['x'])[2:]}{hex(point['y'])[2:]}"
+
+    def compress_point(self, public_key: str) -> str:
+        if public_key[0:2] != '04':
+            raise ValueError('Invalid Public Key')
+        x = int(public_key[2:66], 16)
+        y = int(public_key[66:], 16)
+
+        if (y % 2) == 0:
+            public_key = '02' + format(x, '064x')
+        else:
+            public_key = '03' + format(x, '064x')
+        return public_key
 
     # การคำนวณหลัก: ECDSA
     def signature(self, private_key: int, message: int) -> dict:
         z = message
-        # k = int("3bb13029ce7b1f559ef5e747fcac439f1455a2ec7c5f09b72290795e70665044",16)
-        k = getrandbits(256); r = 0; s = 0
+        k = 47015016470583645446654890691026687320549785451357444754315920288772675949303
+        #k = getrandbits(256)
+        r, s = 0, 0
         while r == 0 or s == 0:
             point = self.multiply(k)
             k_inv = self.modinv(k, self.N)
             r = point['x'] % self.N
-            s = ((z + r * private_key) * k_inv) % self.N; #k += 1
+            s = ((z + r * private_key) * k_inv) % self.N
         return {'r': r, 's': s}
 
     def to_der_format(self, signature: dict) -> str:
@@ -92,32 +108,28 @@ class EllipticCurve:
         x = point['x'] % self.N
         return x == r
 
-def main():
-    curve = EllipticCurve()
-    private_key = getrandbits(256)
-    #private_key = 111798668807017442629247557499629816624858299873427551140682199544191852692645
-    print("Private key:", private_key)
-    message = 67190017246757783140308448604179518505030850719375738244213419124624541387587
 
-    # สร้าง Public key
-    P = curve.multiply(private_key)
-    print("Public Key Point", P)
+curve = EllipticCurve()
+# private_key = getrandbits(256)
 
-    public_key = curve.publickey(private_key)
-    print("Public Key:", public_key)
+private_key = 111798668807017442629247557499629816624858299873427551140682199544191852692645
+# print(hex(private_key)[2:])
+print("Private key:", private_key)
+message = 67190017246757783140308448604179518505030850719375738244213419124624541387587
 
-    # สร้างลายเซ็น ECDSA
-    sig = curve.signature(private_key, message)
-    print("ECDSA signature", sig)
+# สร้าง Public key
+P = curve.multiply(private_key)
+print("Key Point", P)
 
-    # ตรวจสอบเซ็น ECDSA
-    ver = curve.verify(P, message, sig)
-    print(f'signature is {ver}')
+public_key = curve.publickey(private_key)
+print("[U] Public Key:", public_key)
 
-    # พร้อมใช้
-    sig_der = curve.to_der_format(sig)
-    print(f'signature Der format: {sig_der}')
+compress = curve.compress_point(public_key)
+print("[C] Public Key:", compress)
 
+sign = curve.signature(private_key, message)
+der = curve.to_der_format(sign)
+print("Der format:", der)
 
-if __name__ == "__main__":
-    main()
+isValid = curve.verify(P, message, sign)
+print("Signature is:", isValid)
