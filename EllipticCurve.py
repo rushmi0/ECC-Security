@@ -1,6 +1,8 @@
 from random import getrandbits
 
 class ECSecp256k1:
+    
+    
     def __init__(self):
         self.A = 0
         self.B = 7
