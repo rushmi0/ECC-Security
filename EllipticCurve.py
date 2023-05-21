@@ -51,7 +51,11 @@ class ECSecp256k1:
     """ ------------------- ส่วนขยาย ------------------- """
     def publickey(self, k: int) -> str:
         point = self.multiply(k)
-        return f"04{point[0]:x}{point[1]:x}"
+        publickey_hex = f"04{point[0]:x}{point[1]:x}"
+        print(len(publickey_hex))
+        if len(publickey_hex) < 130:
+            publickey_hex = publickey_hex[:2] + "0" + publickey_hex[2:]
+        return publickey_hex
 
     def compress_point(self, publickey_Hex: str) -> str:
         if publickey_Hex[0:2] != '04':
