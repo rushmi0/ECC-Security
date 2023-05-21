@@ -11,6 +11,7 @@ class ECSecp256k1:
 
 
     """ ------------------- การคำนวณหลัก Elliptic Curve cryptography ------------------- """
+    
     def modinv(self, A, N=None):
         if N is None:
             N = self.P
@@ -48,11 +49,12 @@ class ECSecp256k1:
                 current = self.add(current, point)
         return current
 
+    
     """ ------------------- ส่วนขยาย ------------------- """
+    
     def publickey(self, k: int) -> str:
         point = self.multiply(k)
         publickey_hex = f"04{point[0]:x}{point[1]:x}"
-        print(len(publickey_hex))
         if len(publickey_hex) < 130:
             publickey_hex = publickey_hex[:2] + "0" + publickey_hex[2:]
         return publickey_hex
@@ -69,7 +71,9 @@ class ECSecp256k1:
             publickey_Hex = '03' + format(x, '064x')
         return publickey_Hex
 
+    
     """ ------------------- การคำนวณหลัก สร้างลายเซ็นและตรวจสอบ ECDSA ------------------- """
+    
     def signing(self, private_key, message):
         z = message
         #k = 42854675228720239947134362876390869888553449708741430898694136287991817016610
